@@ -1,0 +1,22 @@
+.SalesGrid {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gridArea {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  overflow: auto;
+
+  width: 80vw;
+}
+
+.ag-theme-balham {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
