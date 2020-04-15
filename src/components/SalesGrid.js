@@ -1,36 +1,155 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { AgGridReact } from "ag-grid-react/lib/agGridReact"
 import moment from "moment"
 import axios from "axios"
 import _ from "lodash"
 import crypto from "crypto"
 import "./SalesGrid.css"
+import { calculateUnitPrice, calculateAllSales } from "../util/sales/calculate"
 
 let gridApi
 
 const SalesGrid = ({
   originData,
-  defaultData,
-  setDefaultData,
+  rowData,
+  setRowData,
   fetchMonthSalesData,
   todayMap,
   setTodayMap,
 }) => {
-  useEffect(() => {
-    const res = _.sumBy(defaultData.rowData, (value) => {
-      return Number(value.tableCount)
+  const columnDefs = [
+    {
+      checkboxSelection: true,
+      width: 50,
+    },
+    {
+      headerName: "날짜",
+      field: "saleDate",
+    },
+    {
+      headerName: "서비스 매출",
+      field: "serviceSales",
+      editable: true,
+      valueSetter: (params) => {
+        if (params.data.serviceSales !== params.newValue) {
+          params.data.serviceSales = Number(params.newValue)
+          setRowData([...rowData])
+          return true
+        } else {
+          return false
+        }
+      },
+      valueFormatter(params) {
+        return params.value.toLocaleString()
+      },
+    },
+    {
+      headerName: "현금 매출",
+      field: "moneySales",
+      editable: true,
+      valueSetter: (params) => {
+        if (params.data.moneySales !== params.newValue) {
+          params.data.moneySales = Number(params.newValue)
+          setRowData([...rowData])
+          return true
+        } else {
+          return false
+        }
+      },
+      valueFormatter(params) {
+        return params.value.toLocaleString()
+      },
+    },
+    {
+      headerName: "카드 매출",
+      field: "cardSales",
+      editable: true,
+      valueSetter(params) {
+        if (params.data.cardSales !== params.newValue) {
+          params.data.cardSales = Number(params.newValue)
+          setRowData([...rowData])
+          return true
+        } else {
+          return false
+        }
+      },
+      valueFormatter(params) {
+        return params.value.toLocaleString()
+      },
+    },
+    {
+      headerName: "테이블 수",
+      field: "tableCount",
+      editable: true,
+      valueSetter(params) {
+        if (params.data.tableCount !== params.newValue) {
+          params.data.tableCount = Number(params.newValue)
+          setRowData([...rowData])
+          return true
+        } else {
+          return false
+        }
+      },
+      valueFormatter(params) {
+        return params.value.toLocaleString()
+      },
+    },
+    {
+      headerName: "총 매출",
+      valueGetter(params) {
+        return calculateAllSales(params).toLocaleString()
+      },
+    },
+    {
+      headerName: "객단가",
+      valueGetter(params) {
+        return calculateUnitPrice(params).toLocaleString()
+      },
+    },
+  ]
+
+  const getAverageValue = (rowData, salesValue) => {
+    return _.sumBy(rowData, (value) => {
+      if (rowData.length === 0) return 0
+
+      if (salesValue === "serviceSales") {
+        return Number(value.serviceSales) / rowData.length
+      } else if (salesValue === "moneySales") {
+        return Number(value.moneySales) / rowData.length
+      } else if (salesValue === "cardSales") {
+        return Number(value.cardSales) / rowData.length
+      } else if (salesValue === "tableCount") {
+        return Number(value.tableCount) / rowData.length
+      }
     })
-    console.log(res)
-  }, [
-    defaultData.rowData,
-    _.sum([...defaultData.rowData.map((value) => value.tableCount)]),
-  ])
+  }
+
+  const serviceSalesAverage = getAverageValue(rowData, "serviceSales")
+  const moneySalesAverage = getAverageValue(rowData, "moneySales")
+  const cardSalesAverage = getAverageValue(rowData, "cardSales")
+  const tableCountAverage = getAverageValue(rowData, "tableCount")
+  const allSales = _.sumBy(rowData, (value) => {
+    return (
+      Number(value.serviceSales) +
+      Number(value.moneySales) +
+      Number(value.cardSales)
+    )
+  })
+  const unitPriceAverage =
+    _.sumBy(rowData, (value) => {
+      return Number(value.tableCount)
+    }) === 0
+      ? 0
+      : allSales /
+        _.sumBy(rowData, (value) => {
+          return Number(value.tableCount)
+        })
+
   let onGridReady = (params) => {
     gridApi = params.api
   }
 
   const handleClickNewRow = () => {
-    const { rowData } = defaultData
     const { year, month } = todayMap
     let date
 
@@ -44,9 +163,8 @@ const SalesGrid = ({
         .add(1, "day")
         .format("YYYY-MM-DD")
     }
-    setDefaultData({
-      ...defaultData,
-      rowData: defaultData.rowData.concat({
+    setRowData(
+      rowData.concat({
         saleId: crypto
           .createHash("md5")
           .update(`${year}-${month}-${date}`)
@@ -58,17 +176,13 @@ const SalesGrid = ({
         moneySales: 0,
         serviceSales: 0,
         saleDate: date,
-      }),
-    })
+      })
+    )
   }
 
   const handleSaveSalesGrid = async (e) => {
     e.preventDefault()
-    let difference = _.differenceWith(
-      defaultData.rowData,
-      originData,
-      _.isEqual
-    )
+    let difference = _.differenceWith(rowData, originData, _.isEqual)
     if (difference.length > 0) {
       difference = difference.map((value) => {
         if (Number.isNaN(Number(value.saleId))) {
@@ -96,11 +210,7 @@ const SalesGrid = ({
       alert("삭제할 것을 선택해주세요")
       return
     }
-    let difference = _.differenceWith(
-      defaultData.rowData,
-      deleteList,
-      _.isEqual
-    )
+    let difference = _.differenceWith(rowData, deleteList, _.isEqual)
     for (let i = 0; i < realDbDataList.length; i++) {
       try {
         const deleteObject = realDbDataList[i]
@@ -111,7 +221,7 @@ const SalesGrid = ({
         console.error(e)
       }
     }
-    setDefaultData({ ...defaultData, rowData: difference })
+    setRowData(difference)
   }
 
   const handlePreviousMonth = () => {
@@ -146,6 +256,7 @@ const SalesGrid = ({
     })
     setTodayMap({ year: saleYear, month: saleMonth })
   }
+
   return (
     <div className='SalesGrid'>
       <div className='SalesGrid-buttonArea'>
@@ -154,8 +265,12 @@ const SalesGrid = ({
         <button onClick={handleNextMonth}>{">>"}</button>
       </div>
       <div className='SalesGrid-averageArea'>
-        평균 테이블 수: {} 평균 카드 매출: {} 평균 현금 매출: {}평균 서비스
-        매출: {} 평균 객단가: {} 총 매출액: {}
+        평균 테이블 수: {tableCountAverage.toLocaleString()} 평균 카드 매출:{" "}
+        {cardSalesAverage.toLocaleString()} 평균 현금 매출:{" "}
+        {moneySalesAverage.toLocaleString()}평균 서비스 매출:{" "}
+        {serviceSalesAverage.toLocaleString()} 평균 객단가:{" "}
+        {unitPriceAverage.toLocaleString()} 총 매출액:{" "}
+        {allSales.toLocaleString()}
       </div>
       <div className='SalesGrid-gridArea'>
         <div
@@ -166,8 +281,8 @@ const SalesGrid = ({
           }}
         >
           <AgGridReact
-            columnDefs={defaultData.columnDefs}
-            rowData={defaultData.rowData}
+            columnDefs={columnDefs}
+            rowData={rowData}
             rowSelection={"multiple"}
             onGridReady={onGridReady}
           ></AgGridReact>
