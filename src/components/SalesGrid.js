@@ -30,10 +30,12 @@ const SalesGrid = ({
       headerName: "서비스 매출",
       field: "serviceSales",
       editable: true,
-      valueSetter: (params) => {
+      valueSetter(params) {
         if (params.data.serviceSales !== params.newValue) {
           params.data.serviceSales = Number(params.newValue)
-          setRowData([...rowData])
+          let list = []
+          gridApi.forEachNode((node) => list.push(node.data))
+          setRowData(list)
           return true
         } else {
           return false
@@ -47,10 +49,12 @@ const SalesGrid = ({
       headerName: "현금 매출",
       field: "moneySales",
       editable: true,
-      valueSetter: (params) => {
+      valueSetter(params) {
         if (params.data.moneySales !== params.newValue) {
           params.data.moneySales = Number(params.newValue)
-          setRowData([...rowData])
+          let list = []
+          gridApi.forEachNode((node) => list.push(node.data))
+          setRowData(list)
           return true
         } else {
           return false
@@ -67,7 +71,9 @@ const SalesGrid = ({
       valueSetter(params) {
         if (params.data.cardSales !== params.newValue) {
           params.data.cardSales = Number(params.newValue)
-          setRowData([...rowData])
+          let list = []
+          gridApi.forEachNode((node) => list.push(node.data))
+          setRowData(list)
           return true
         } else {
           return false
@@ -84,7 +90,9 @@ const SalesGrid = ({
       valueSetter(params) {
         if (params.data.tableCount !== params.newValue) {
           params.data.tableCount = Number(params.newValue)
-          setRowData([...rowData])
+          let list = []
+          gridApi.forEachNode((node) => list.push(node.data))
+          setRowData(list)
           return true
         } else {
           return false
@@ -97,13 +105,17 @@ const SalesGrid = ({
     {
       headerName: "총 매출",
       valueGetter(params) {
-        return calculateAllSales(params).toLocaleString()
+        return calculateAllSales(params) % 1 === 0
+          ? calculateAllSales(params).toLocaleString()
+          : calculateAllSales(params).toFixed(1).toLocaleString()
       },
     },
     {
       headerName: "객단가",
       valueGetter(params) {
-        return calculateUnitPrice(params).toLocaleString()
+        return calculateUnitPrice(params) % 1 === 0
+          ? calculateUnitPrice(params).toLocaleString()
+          : calculateUnitPrice(params).toFixed(1).toLocaleString()
       },
     },
   ]
