@@ -105,17 +105,30 @@ const SalesGrid = ({
     {
       headerName: "총 매출",
       valueGetter(params) {
-        return calculateAllSales(params) % 1 === 0
-          ? calculateAllSales(params).toLocaleString()
-          : calculateAllSales(params).toFixed(1).toLocaleString()
+        const { cardSales, moneySales, serviceSales } = params.data
+        const allSales = calculateAllSales({
+          cardSales,
+          moneySales,
+          serviceSales,
+        })
+        return allSales % 1 === 0
+          ? allSales.toLocaleString()
+          : allSales.toFixed(1).toLocaleString()
       },
     },
     {
       headerName: "객단가",
       valueGetter(params) {
-        return calculateUnitPrice(params) % 1 === 0
-          ? calculateUnitPrice(params).toLocaleString()
-          : calculateUnitPrice(params).toFixed(1).toLocaleString()
+        const { cardSales, moneySales, serviceSales, tableCount } = params.data
+        const unitPrice = calculateUnitPrice({
+          cardSales,
+          moneySales,
+          serviceSales,
+          tableCount,
+        })
+        return unitPrice % 1 === 0
+          ? unitPrice.toLocaleString()
+          : unitPrice.toFixed(1).toLocaleString()
       },
     },
   ]

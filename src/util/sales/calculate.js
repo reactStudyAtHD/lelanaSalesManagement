@@ -1,12 +1,15 @@
 import crypto from "crypto"
 
-export const calculateAllSales = (params) => {
-  const { cardSales, moneySales, serviceSales } = params.data
+export const calculateAllSales = ({ cardSales, moneySales, serviceSales }) => {
   return Number(cardSales) + Number(moneySales) + Number(serviceSales)
 }
 
-export const calculateUnitPrice = (params) => {
-  const { cardSales, moneySales, serviceSales, tableCount } = params.data
+export const calculateUnitPrice = ({
+  cardSales,
+  moneySales,
+  serviceSales,
+  tableCount,
+}) => {
   const salesSum = Number(cardSales) + Number(moneySales) + Number(serviceSales)
   return tableCount !== 0 ? salesSum / Number(tableCount) : 0
 }

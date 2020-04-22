@@ -6,6 +6,9 @@ import axios from "axios"
 import SalesGrid from "./components/SalesGrid"
 import { MakeEmptyObject } from "./util/sales/calculate"
 import _ from "lodash"
+import SalesViewer from "./components/SalesViewer"
+import { Link, Switch, Route, BrowserRouter } from "react-router-dom"
+import Home from "./components/Home"
 
 function App() {
   const fetchMonthSalesData = async (params) => {
@@ -27,6 +30,7 @@ function App() {
     }
     setLoading(false)
   }
+  const [defaultDate, setDefaultDate] = useState(new Date())
 
   useEffect(() => {
     const dateObject = new Date()
@@ -49,18 +53,44 @@ function App() {
 
   return (
     <div className='App'>
-      {loading ? (
+      <BrowserRouter>
+        <header>
+          <Link to='/sale-manage'>매출관리</Link>
+          <Link to='sale-calendor'>매출달력</Link>
+        </header>
+        <Switch>
+          <Route exact path='/' component={Home} />
+          <Route
+            path='/sale-manage'
+            render={(props) => (
+              <SalesGrid
+                originData={originData}
+                rowData={rowData}
+                setRowData={setRowData}
+                fetchMonthSalesData={fetchMonthSalesData}
+                todayMap={todayMap}
+                setTodayMap={setTodayMap}
+              />
+            )}
+          />
+          <Route
+            path='/sale-calendor'
+            render={(props) => (
+              <SalesViewer
+                rowData={rowData}
+                fetchMonthSalesData={fetchMonthSalesData}
+                defaultDate={defaultDate}
+                setDefaultDate={setDefaultDate}
+              />
+            )}
+          />
+        </Switch>
+      </BrowserRouter>
+
+      {/* {loading ? (
         <div>로딩중</div>
       ) : (
-        <SalesGrid
-          originData={originData}
-          rowData={rowData}
-          setRowData={setRowData}
-          fetchMonthSalesData={fetchMonthSalesData}
-          todayMap={todayMap}
-          setTodayMap={setTodayMap}
-        />
-      )}
+      )} */}
     </div>
   )
 }
